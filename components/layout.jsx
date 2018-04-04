@@ -13,7 +13,7 @@ export default class Navigation extends React.PureComponent {
           <h1>ocpu.me</h1>
           <nav className={css.nav}>
             <Link href="/">Home</Link>
-            <Link href="/products">Products</Link>
+            <Link href="/test">Test</Link>
           </nav>
         </div>
         <div className={css.breadcrumb}>home</div>
