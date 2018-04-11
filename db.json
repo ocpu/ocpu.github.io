@@ -1,0 +1,11 @@
+{
+  "posts": [
+    {
+      "id": 0,
+      "title": "Hello, world!",
+      "content": "This is testing the system. Hopefully this will work. I want to try it once more.",
+      "created": "2018-04-06T17:46:36+02:00",
+      "modified": "2018-04-06T17:59:18+02:00"
+    }
+  ]
+}
