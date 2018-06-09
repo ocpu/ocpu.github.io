@@ -9,9 +9,10 @@ const NavLink = (props) => <Link as={props.as} href={props.href}><a {...props}>{
 export default class MyDocument extends Document {
   render() {
     return (
-      <html>
+      <html className="js">
         <Head>
           <link rel="stylesheet" href="/_next/static/style.css" />
+          <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
           <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Comfortaa|Roboto:300" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         </Head>

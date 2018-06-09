@@ -8,15 +8,19 @@ const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
-app.prepare()
-  .then(() => require('lowdb')(new (require('lowdb/adapters/FileAsync'))('db.json')))
-  .then(db => express()
+// if (dev) 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
+
+;(async()=>{
+  await app.prepare()
+  const db = await require('lowdb')(new (require('lowdb/adapters/FileAsync'))('db.json'))
+  const server = express()
     .get('/api/post/:id', (req, res) => {
       const id = parseInt(req.params.id)
       const length = db.get('posts').value().length
 
       if (!(0 <= id && id < length)) return sendJSONResponse(res, 404, {
-        code: 401,
+        code: 400,
         message: 'Invalid id'
       })
 
@@ -27,7 +31,7 @@ app.prepare()
       const length = db.get('posts').value().length
 
       if (!(0 <= id && id < length)) return sendJSONResponse(res, 404, {
-        code: 401,
+        code: 400,
         message: 'Invalid id'
       })
       
@@ -48,8 +52,8 @@ app.prepare()
             )
         } catch (e) {
           console.error(e)
-          return sendJSONResponse(res, 401, {
-            code: 401,
+          return sendJSONResponse(res, 400, {
+            code: 400,
             message: 'Invalid JSON'
           })
         }
@@ -58,14 +62,14 @@ app.prepare()
     .get('/api/posts', (req, res) => {
       const posts = db.get('posts').value()
       let limit = parseInt('' + req.query.limit) || posts.length
-      if (limit <= 0) return sendJSONResponse(res, 401, {
-        code: 401,
+      if (limit <= 0) return sendJSONResponse(res, 400, {
+        code: 400,
         message: 'limit is less than or equal to the amount of posts'
       })
 
       const start = parseInt('' + req.query.start) || 0
-      if (start >= posts.length) return sendJSONResponse(res, 401, {
-        code: 401,
+      if (start >= posts.length) return sendJSONResponse(res, 400, {
+        code: 400,
         message: 'from is greater than or equal to the amount of posts'
       })
       if (start < 0) start = 0
@@ -92,18 +96,108 @@ app.prepare()
             .send(content)
         } catch (e) {
           console.error(e)
-          return sendJSONResponse(res, 401, {
-            code: 401,
+          return sendJSONResponse(res, 400, {
+            code: 400,
             message: 'Invalid JSON'
           })
         }
       })
     })
+    .get('/todo_list', (req, res) => sendJSONResponse(res, 200, db.get('todos').value()))
+    .post('/todo_list', (req, res) => {
+      const data = []
+      req.on('data', c => data.push(c)||(length+=c.byteLength)).once('end', () => {
+        if (!data.length) return sendJSONResponse(res, 400, {
+          code: 400,
+          message: 'Invalid request'
+        })
+        const message = Buffer.concat(data).toString().slice(8)
+        if (!message.length) return sendJSONResponse(res, 400, {
+          code: 400,
+          message: 'Invalid request'
+        })
+        db.get('todos').push({done: false, message}).write()
+        res.redirect('/list')
+      })
+    })
+    .post('/todo_list/:id/checked', (req, res) => {
+      const i = +req.params.id
+      const todos = db.get('todos').value()
+      todos[i].done = !todos[i].done
+      db.set('todos', todos).write()
+      res.redirect('/list')
+    })
+    .post('/todo_list/:id/remove', (req, res) => {
+      const i = +req.params.id
+      const todos = db.get('todos').value()
+      todos.splice(i, 1)
+      db.set('todos', todos).write()
+      res.redirect('/list')
+    })
     .get('*', handle)
-  )
-  .then(server => server.listen(3000, () => {
-      console.log('> Ready on http://localhost:3000')
-  }))
+
+  const wss = new (require('ws').Server)({ noServer: true })
+  wss.on('connection', wsConnection)
+  setInterval(() => {
+    wss.clients.forEach(ws => {
+      if (!ws.isAlive) return ws.terminate()
+      
+      ws.isAlive = false
+      ws.ping(null, false, true)
+    })
+  }, 10000)
+  const read = require('fs').readFileSync
+  const exists = require('fs').existsSync
+  const path = require('path').resolve
+  require('https')
+    .createServer({
+      cert: exists(path('./server.crt')) ? read(path('./server.crt')) : read('/etc/letsencrypt/live/ocpu.me/cert.pem'),
+      key: exists(path('./server.key')) ? read(path('./server.key')) : read('/etc/letsencrypt/live/ocpu.me/privkey.pem')
+    }, server)
+    .on('upgrade', (req, socket, head) => {
+      if (req.url.startsWith('/ws/todo_list')) {
+        wss.handleUpgrade(req, socket, head, wsConnection)
+      }
+    })
+    .listen(3000, () => {
+      console.log('> Ready on https://localhost:3000')
+    })
+
+    function wsConnection(ws) {
+      // console.log(ws)
+      ws.isAlive = true
+      ws.on('pong', () => {
+          ws.isAlive = true;
+      })
+      ws.on('message', json => {
+        const message = JSON.parse(json)
+        console.log(json)
+        let i, todos
+        switch (message.op) {
+          case 0:
+            db.get('todos').push({done: false, message: message.d}).write()
+            break;
+          case 1:
+            i = +message.d
+            todos = db.get('todos').value()
+            todos[i].done = !todos[i].done
+            db.set('todos', todos).write()
+            break;
+          case 2:
+            i = +message.d
+            todos = db.get('todos').value()
+            todos.splice(i, 1)
+            db.set('todos', todos).write()
+            break;
+        }
+    
+        wss.clients.forEach(c => {
+          if (c != ws)
+            c.send(json)
+        })
+      })
+    }
+})()
 
 const sendJSONResponse = (res, code, json) => res
   .status(code)
