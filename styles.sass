@@ -114,3 +114,35 @@ a
 
 //   @media (max-width: 426px)
 //     display: flex
+
+.day
+  margin: 0
+  font-size: 1.7em
+
+.event
+  display: flex
+  flex-direction: row
+  .time
+    width: 7em
+    .time-text
+      display: block
+      width: 100%
+      text-align: center
+    .rest
+      content: ''
+      display: block
+      width: 100%
+      height: 50%
+      background-color: rgba(0,0,0,0)
+      // +filter-gradient(#ffffff, #ffffff, horizontal)
+      background-image: linear-gradient(to right, rgba(0,0,0,0) 49%,#9a0fe0 49%,#9a0fe0 51%,rgba(0,0,0,0) 51%)
+      &[hidden]
+        background: none
+  .info
+    margin-left: 2em
+    h3
+      font-size: 1.1em
+      margin-top: 0
+      margin-bottom: .2em
+    p
+      margin-top: .2em
