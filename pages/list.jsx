@@ -4,14 +4,14 @@ import 'isomorphic-fetch'
 
 class List extends React.Component {
   static getInitialProps = async () =>
-    fetch(`https://localhost:3000/todo_list`).then(r => r.json()).then(r => ({todos:r}))
+    fetch(`http://localhost:3000/todo_list`).then(r => r.json()).then(r => ({todos:r}))
 
   state = {
     message: '',
     todos: this.props.todos,
     isClient: false
   }
-  ws = typeof WebSocket !== 'undefined'&&new WebSocket('wss://localhost:3000/ws/todo_list')
+  ws = typeof WebSocket !== 'undefined'&&new WebSocket('ws://localhost:3000/ws/todo_list')
 
   componentDidMount() {
     this.ws.addEventListener('message', e => {
