@@ -148,7 +148,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
   }, 10000)
   const read = require('fs').readFileSync
   const path = require('path').resolve
-  (dev
+  ;(dev
     ? require('https')
     .createServer({ cert: read(path('./server.crt')), key: read(path('./server.key')) }, server)
     : require('http').createServer(server))
