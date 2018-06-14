@@ -147,14 +147,10 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
     })
   }, 10000)
   const read = require('fs').readFileSync
-  const exists = require('fs').existsSync
   const path = require('path').resolve
   (dev
     ? require('https')
-    .createServer({
-      cert: exists(path('./server.crt')) ? read(path('./server.crt')) : read('/etc/letsencrypt/live/ocpu.me/cert.pem'),
-      key: exists(path('./server.key')) ? read(path('./server.key')) : read('/etc/letsencrypt/live/ocpu.me/privkey.pem')
-    }, server)
+    .createServer({ cert: read(path('./server.crt')), key: read(path('./server.key')) }, server)
     : require('http').createServer(server))
     .on('upgrade', (req, socket, head) => {
       if (req.url.startsWith('/ws/todo_list')) {
