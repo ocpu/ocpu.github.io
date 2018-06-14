@@ -160,7 +160,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
       }
     })
     .listen(3000, () => {
-      console.log('> Ready on https://localhost:3000')
+      console.log('> Ready on http://localhost:3000')
     })
 
     function wsConnection(ws) {
