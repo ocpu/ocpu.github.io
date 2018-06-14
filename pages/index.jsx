@@ -19,7 +19,7 @@ const renderPosts = posts => {
 }
 
 Page.getInitialProps = async ({ req }) => {
-  return { posts: await fetch('https://localhost:3000/api/posts').then(res => res.json()) }
+  return { posts: await fetch('http://localhost:3000/api/posts').then(res => res.json()) }
 }
 
 export default Page

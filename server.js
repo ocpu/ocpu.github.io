@@ -148,10 +148,12 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
   }, 10000)
   const read = require('fs').readFileSync
   const path = require('path').resolve
-  ;(dev
-    ? require('https')
-    .createServer({ cert: read(path('./server.crt')), key: read(path('./server.key')) }, server)
-    : require('http').createServer(server))
+  ;(
+    // dev
+    // ? require('https')
+    // .createServer({ cert: read(path('./server.crt')), key: read(path('./server.key')) }, server)
+    // : 
+    require('http').createServer(server))
     .on('upgrade', (req, socket, head) => {
       if (req.url.startsWith('/ws/todo_list')) {
         wss.handleUpgrade(req, socket, head, wsConnection)
